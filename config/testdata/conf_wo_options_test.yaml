@@ -1,0 +1,5 @@
+db:
+  driver: mongodb+srv
+  user: user
+  password: password
+  host: host
