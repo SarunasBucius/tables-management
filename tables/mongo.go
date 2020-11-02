@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getTables(c config) ([]table, error) {
@@ -24,4 +25,24 @@ func getTables(c config) ([]table, error) {
 	}
 
 	return tables, nil
+}
+
+func getTableByID(c config, ID string) (table, error) {
+	db := c.mongo.Database("content_management")
+	coll := db.Collection("tables")
+
+	objectID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		c.log.Println(err)
+		return table{}, err
+	}
+
+	var t table
+	err = coll.FindOne(context.Background(), bson.M{"_id": objectID}).Decode(&t)
+	if err != nil {
+		c.log.Println(err)
+		return table{}, err
+	}
+
+	return t, nil
 }

@@ -1,11 +1,11 @@
 package tables
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/SarunasBucius/tables-management/helpers"
 	"github.com/go-chi/chi"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -23,7 +23,7 @@ func SetRoutes(mongo *mongo.Client, logger ...*log.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/", c.getTablesHandler)
-	r.Get("/{ID}", getTableByIDHandler)
+	r.Get("/{ID}", c.getTableByIDHandler)
 	r.Post("/", createTableHandler)
 	r.Put("/{ID}", editTableByIDHandler)
 	r.Delete("/{ID}", deleteTableByIDHandler)
@@ -38,25 +38,19 @@ func (c config) getTablesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse, err := json.Marshal(tables)
-	if err != nil {
-		c.log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(jsonResponse)
-	if err != nil {
-		c.log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	helpers.JSONResponse(helpers.Response{Data: tables}, w, c.log)
 }
 
-func getTableByIDHandler(w http.ResponseWriter, r *http.Request) {
-	panic("not implemented")
+func (c config) getTableByIDHandler(w http.ResponseWriter, r *http.Request) {
+	ID := chi.URLParam(r, "ID")
+
+	table, err := getTableByID(c, ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	helpers.JSONResponse(helpers.Response{Data: table}, w, c.log)
 }
 
 func createTableHandler(w http.ResponseWriter, r *http.Request) {
